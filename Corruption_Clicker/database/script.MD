@@ -1,0 +1,1 @@
+This is the script you run to actually set up the database locally.
