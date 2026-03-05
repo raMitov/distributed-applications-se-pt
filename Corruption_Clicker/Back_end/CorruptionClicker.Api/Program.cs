@@ -53,10 +53,16 @@ builder.Services.AddSwaggerGen(c =>
         }
     });
 });
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("Frontend", policy =>
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod());
+});
 var app = builder.Build();
 app.UseAuthentication();
 app.UseAuthorization();
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
 app.UseSwagger();
@@ -67,17 +73,7 @@ app.UseHttpsRedirection();
 
 
 app.MapControllers();
-app.MapGet("/db-check/upgrades", async (AppDbContext db) =>
-{
-    var count = await db.Upgrades.CountAsync();
-    var first3 = await db.Upgrades
-        .OrderBy(u => u.UpgradeId)
-        .Select(u => new { u.UpgradeId, u.Name })
-        .Take(3)
-        .ToListAsync();
-
-    return Results.Ok(new { count, first3 });
-});
+app.UseCors("Frontend");
 app.Run();
 
 

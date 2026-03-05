@@ -12,7 +12,7 @@ public class UserUpgrade
     public int UserUpgradeId { get; set; }
 
     [Column("user_id")]
-    public string UserId { get; set; } = string.Empty;
+    public int UserId { get; set; } = 0;
 
     [Column("upgrade_id")]
     public int UpgradeId { get; set; } = 0;
@@ -21,7 +21,7 @@ public class UserUpgrade
     public int Quantity { get; set; } = 0;
 
     [Column("total_spent")]
-    public int TotalSpent { get; set; } = 0;
+    public long TotalSpent { get; set; } = 0;
 
     [Column("is_equipped")]
     public bool IsEquipped { get; set; } = true;
