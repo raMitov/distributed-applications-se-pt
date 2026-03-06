@@ -205,7 +205,7 @@ async function click_Mr_Cash() {
   }
 }
 
-/* ---------- ADMIN ---------- */
+// ---------- ADMIN ---------- 
 
 function showAdminTab(id) {
   ["admin-upgrades", "admin-users", "admin-userupgrades"].forEach(x => {
@@ -276,6 +276,134 @@ async function loadAdminUpgrades() {
   });
 }
 
+async function loadAdminUsers() {
+  const data = await api("/api/users?page=1&pageSize=50");
+  const container = document.getElementById("admin-users-list");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  (data.items || []).forEach(u => {
+    const div = document.createElement("div");
+    div.className = "admin-row";
+
+    div.innerHTML = `
+      <div>
+        <strong>${u.userName}</strong><br>
+        <small>
+          ID:${u.userId} |
+          Email:${u.email} |
+          Role:${u.role} |
+          Balance:${u.cashBalance}
+        </small>
+      </div>
+
+      <div class="actions">
+        <button>Edit</button>
+        <button>Delete</button>
+      </div>
+    `;
+
+    const buttons = div.querySelectorAll("button");
+
+    buttons[0].onclick = async () => {
+      const name = prompt("Username:", u.userName);
+      const email = prompt("Email:", u.email);
+      const role = prompt("Role:", u.role);
+
+      if (!name || !email || !role) return;
+
+      await api(`/api/users/${u.userId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userName: name,
+          email: email,
+          role: role
+        })
+      });
+
+      await loadAdminUsers();
+    };
+
+    buttons[1].onclick = async () => {
+      if (!confirm("Delete user?")) return;
+
+      await api(`/api/users/${u.userId}`, {
+        method: "DELETE"
+      });
+
+      await loadAdminUsers();
+    };
+
+    container.appendChild(div);
+  });
+}
+
+async function loadAdminUserUpgrades() {
+  const data = await api("/api/userupgrades?page=1&pageSize=100");
+  const container = document.getElementById("admin-userupgrades-list");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  (data.items || []).forEach(x => {
+    const div = document.createElement("div");
+    div.className = "admin-row";
+
+    div.innerHTML = `
+      <div>
+        <strong>User ${x.userId}</strong><br>
+        <small>
+          Upgrade:${x.upgradeId} |
+          Quantity:${x.quantity} |
+          Spent:${x.totalSpent}
+        </small>
+      </div>
+
+      <div class="actions">
+        <button>Edit</button>
+        <button>Delete</button>
+      </div>
+    `;
+
+    const buttons = div.querySelectorAll("button");
+
+    buttons[0].onclick = async () => {
+      const quantity = prompt("Quantity:", x.quantity);
+      const spent = prompt("TotalSpent:", x.totalSpent);
+
+      if (!quantity || !spent) return;
+
+      await api(`/api/userupgrades/${x.userUpgradeId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: x.userId,
+          upgradeId: x.upgradeId,
+          quantity: Number(quantity),
+          totalSpent: Number(spent),
+          isEquipped: true
+        })
+      });
+
+      await loadAdminUserUpgrades();
+    };
+
+    buttons[1].onclick = async () => {
+      if (!confirm("Delete upgrade?")) return;
+
+      await api(`/api/userupgrades/${x.userUpgradeId}`, {
+        method: "DELETE"
+      });
+
+      await loadAdminUserUpgrades();
+    };
+
+    container.appendChild(div);
+  });
+}
+
 function wireAdminPanel() {
   const btnAdminToggle = document.getElementById("btn-admin-toggle");
   const btnAdminClose = document.getElementById("btn-admin-close");
@@ -286,11 +414,18 @@ function wireAdminPanel() {
   const btnUpgradeSave = document.getElementById("btn-upgrade-save");
 
   if (btnAdminToggle) {
-    btnAdminToggle.onclick = () => {
+    btnAdminToggle.onclick = async () => {
       const adminPanel = document.getElementById("admin-panel");
-      if (adminPanel) adminPanel.classList.remove("hidden");
-      showAdminTab("admin-upgrades");
-      loadAdminUpgrades();
+      if (!adminPanel) return;
+
+      adminPanel.classList.toggle("hidden");
+
+      if (!adminPanel.classList.contains("hidden")) {
+        showAdminTab("admin-upgrades");
+        await loadAdminUpgrades();
+        await loadAdminUsers();
+        await loadAdminUserUpgrades();
+      }
     };
   }
 
@@ -311,12 +446,14 @@ function wireAdminPanel() {
   if (tabUsers) {
     tabUsers.onclick = () => {
       showAdminTab("admin-users");
+      loadAdminUsers();
     };
   }
 
   if (tabUserUpgrades) {
     tabUserUpgrades.onclick = () => {
       showAdminTab("admin-userupgrades");
+      loadAdminUserUpgrades();
     };
   }
 
@@ -360,7 +497,7 @@ function wireAdminPanel() {
   }
 }
 
-/* ---------- STARTUP ---------- */
+//---------- STARTUP ---------
 
 function wireMainButtons() {
   const btnStart = document.getElementById("btn-start");
