@@ -1,27 +1,38 @@
-// CHANGE THIS if your API port differs
 const API_BASE = "http://localhost:5059";
 
+let userRole = localStorage.getItem("cc_role") || "";
 let token = localStorage.getItem("cc_token") || "";
 let userName = localStorage.getItem("cc_user") || "";
 
-function showScreen(id){
-  ["screen-loading","screen-auth","screen-game"].forEach(s =>
-    document.getElementById(s).classList.add("hidden")
-  );
-  document.getElementById(id).classList.remove("hidden");
+const MR_CASH_NORMAL = "images/mr_cash.png";
+const MR_CASH_CLICKED = "images/mr_cash_smiling.png";
+
+function showScreen(id) {
+  ["screen-loading", "screen-auth", "screen-game"].forEach(s => {
+    const el = document.getElementById(s);
+    if (el) el.classList.add("hidden");
+  });
+
+  const target = document.getElementById(id);
+  if (target) target.classList.remove("hidden");
 }
 
-function setAuthError(msg){
-  document.getElementById("auth-error").textContent = msg || "";
-}
-function setRegError(msg){
-  document.getElementById("reg-error").textContent = msg || "";
-}
-function setGameError(msg){
-  document.getElementById("game-error").textContent = msg || "";
+function setAuthError(msg) {
+  const el = document.getElementById("auth-error");
+  if (el) el.textContent = msg || "";
 }
 
-async function api(path, options = {}){
+function setRegError(msg) {
+  const el = document.getElementById("reg-error");
+  if (el) el.textContent = msg || "";
+}
+
+function setGameError(msg) {
+  const el = document.getElementById("game-error");
+  if (el) el.textContent = msg || "";
+}
+
+async function api(path, options = {}) {
   const headers = options.headers || {};
   if (token) headers["Authorization"] = "Bearer " + token;
   options.headers = headers;
@@ -30,29 +41,35 @@ async function api(path, options = {}){
   const text = await res.text();
 
   let data = null;
-  try { data = text ? JSON.parse(text) : null; } catch { /* ignore */ }
+  try {
+    data = text ? JSON.parse(text) : null;
+  } catch {}
 
-  if (!res.ok){
+  if (!res.ok) {
     const msg = (data && (data.message || data.error)) || text || `HTTP ${res.status}`;
     throw new Error(msg);
   }
+
   return data;
 }
 
-async function login(){
+async function login() {
   setAuthError("");
+
   const u = document.getElementById("login-username").value.trim();
   const p = document.getElementById("login-password").value;
 
   const data = await api("/api/auth/login", {
     method: "POST",
-    headers: { "Content-Type":"application/json" },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ userName: u, password: p })
   });
 
   token = data.token;
   userName = data.user.userName;
+  userRole = data.user.role;
 
+  localStorage.setItem("cc_role", userRole);
   localStorage.setItem("cc_token", token);
   localStorage.setItem("cc_user", userName);
 
@@ -60,41 +77,65 @@ async function login(){
   showScreen("screen-game");
 }
 
-async function register(){
+async function register() {
   setRegError("");
+
   const u = document.getElementById("reg-username").value.trim();
   const e = document.getElementById("reg-email").value.trim();
   const p = document.getElementById("reg-password").value;
 
   await api("/api/auth/register", {
     method: "POST",
-    headers: { "Content-Type":"application/json" },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ userName: u, email: e, password: p })
   });
 
-  // after register, user logs in
   document.getElementById("login-username").value = u;
   document.getElementById("login-password").value = p;
 }
 
-function logout(){
+function logout() {
+  userRole = "";
   token = "";
   userName = "";
+
+  localStorage.removeItem("cc_role");
   localStorage.removeItem("cc_token");
   localStorage.removeItem("cc_user");
+
+  const btnAdminToggle = document.getElementById("btn-admin-toggle");
+  const adminPanel = document.getElementById("admin-panel");
+
+  if (btnAdminToggle) btnAdminToggle.classList.add("hidden");
+  if (adminPanel) adminPanel.classList.add("hidden");
+
   showScreen("screen-auth");
 }
 
-function renderUpgrades(list){
+function normalizeImageUrl(path) {
+  if (!path) return "images/upgrades/placeholder.png";
+  if (path.startsWith("http")) return path;
+  if (path.startsWith("/")) return path.substring(1);
+  return path;
+}
+
+function renderUpgrades(list) {
   const container = document.getElementById("upgrades-list");
+  if (!container) return;
+
   container.innerHTML = "";
+
+  if (!Array.isArray(list)) {
+    console.log("renderUpgrades received:", list);
+    return;
+  }
 
   list.forEach(u => {
     const div = document.createElement("div");
     div.className = "upgrade";
 
     div.innerHTML = `
-      <img src="${u.imageUrl}" alt="">
+      <img src="${normalizeImageUrl(u.imageUrl)}" alt="${u.name}">
       <div class="meta">
         <div class="name">${u.name} (x${u.quantity})</div>
         <div class="sub">Cost: ${u.nextCost} | +CPS ${u.cpsBonus} | +CPC ${u.cpcBonus}</div>
@@ -103,11 +144,11 @@ function renderUpgrades(list){
     `;
 
     div.querySelector("button").onclick = async () => {
-      try{
+      try {
         setGameError("");
         await api(`/api/game/buy/${u.upgradeId}`, { method: "POST" });
         await loadGameState();
-      }catch(err){
+      } catch (err) {
         setGameError(err.message);
       }
     };
@@ -116,46 +157,260 @@ function renderUpgrades(list){
   });
 }
 
-async function loadGameState(){
+async function loadGameState() {
   const data = await api("/api/game/state");
-  document.getElementById("txt-user").textContent = `User: ${userName}`;
-  document.getElementById("txt-balance").textContent = `Cash: ${data.cashBalance}`;
-  document.getElementById("txt-cpc").textContent = `Cash/Click: ${data.cashPerClick}`;
+
+  const txtUser = document.getElementById("txt-user");
+  const txtBalance = document.getElementById("txt-balance");
+  const txtCpc = document.getElementById("txt-cpc");
+  const btnAdminToggle = document.getElementById("btn-admin-toggle");
+
+  if (txtUser) txtUser.textContent = `User: ${userName}`;
+  if (txtBalance) txtBalance.textContent = `Cash: ${data.cashBalance}`;
+  if (txtCpc) txtCpc.textContent = `Cash/Click: ${data.cashPerClick}`;
+
+  if (btnAdminToggle) {
+    if (userRole === "Admin") btnAdminToggle.classList.remove("hidden");
+    else btnAdminToggle.classList.add("hidden");
+  }
+
   renderUpgrades(data.upgrades);
 }
 
-async function click_Mr_Cash(){
-  try{
+let cashAnimating = false;
+
+async function click_Mr_Cash() {
+  try {
     setGameError("");
+
+    const mrCash = document.getElementById("mr_cash");
+    if (!mrCash) return;
+
+    if (!cashAnimating) {
+      cashAnimating = true;
+      mrCash.src = MR_CASH_CLICKED;
+      mrCash.classList.add("clicked");
+
+      setTimeout(() => {
+        mrCash.src = MR_CASH_NORMAL;
+        mrCash.classList.remove("clicked");
+        cashAnimating = false;
+      }, 140);
+    }
+
     await api("/api/game/click", { method: "POST" });
     await loadGameState();
-  }catch(err){
+  } catch (err) {
     setGameError(err.message);
   }
 }
 
-// Wire buttons
-document.getElementById("btn-start").onclick = () => {
-  if (token) {
-    loadGameState().then(() => showScreen("screen-game")).catch(() => showScreen("screen-auth"));
-  } else {
-    showScreen("screen-auth");
-  }
-};
-setInterval(async () => {
-  if (!token) return;
-  try {
-    await api("/api/game/tick", { method: "POST" });
-    await loadGameState();
-  } catch {
-  }
-}, 1000);
-document.getElementById("btn-login").onclick = () => login().catch(e => setAuthError(e.message));
-document.getElementById("btn-register").onclick = () => register().catch(e => setRegError(e.message));
-document.getElementById("btn-logout").onclick = logout;
+/* ---------- ADMIN ---------- */
 
-document.getElementById("mr_cash").onclick = click_Mr_Cash;
-document.getElementById("btn-click").onclick = click_Mr_Cash;
+function showAdminTab(id) {
+  ["admin-upgrades", "admin-users", "admin-userupgrades"].forEach(x => {
+    const el = document.getElementById(x);
+    if (el) el.classList.add("hidden");
+  });
 
-// Initial screen
-showScreen("screen-loading");
+  const target = document.getElementById(id);
+  if (target) target.classList.remove("hidden");
+}
+
+function fillUpgradeForm(u) {
+  document.getElementById("upgrade-id").value = u.upgradeId;
+  document.getElementById("upgrade-name").value = u.name;
+  document.getElementById("upgrade-description").value = u.description;
+  document.getElementById("upgrade-imageurl").value = u.imageUrl;
+  document.getElementById("upgrade-basecost").value = u.baseCost;
+  document.getElementById("upgrade-cpsbonus").value = u.cpsBonus;
+  document.getElementById("upgrade-cpcbonus").value = u.cpcBonus;
+  document.getElementById("upgrade-maxquantity").value = u.maxQuantity;
+  document.getElementById("upgrade-isactive").checked = u.isActive;
+}
+
+function clearUpgradeForm() {
+  document.getElementById("upgrade-id").value = "";
+  document.getElementById("upgrade-name").value = "";
+  document.getElementById("upgrade-description").value = "";
+  document.getElementById("upgrade-imageurl").value = "";
+  document.getElementById("upgrade-basecost").value = "";
+  document.getElementById("upgrade-cpsbonus").value = "";
+  document.getElementById("upgrade-cpcbonus").value = "";
+  document.getElementById("upgrade-maxquantity").value = "";
+  document.getElementById("upgrade-isactive").checked = true;
+}
+
+async function loadAdminUpgrades() {
+  const data = await api("/api/upgrades?page=1&pageSize=100");
+  const list = data.items || [];
+  const container = document.getElementById("admin-upgrades-list");
+  if (!container) return;
+
+  container.innerHTML = "";
+
+  list.forEach(u => {
+    const div = document.createElement("div");
+    div.className = "admin-row";
+    div.innerHTML = `
+      <div>
+        <strong>${u.name}</strong><br>
+        <small>ID: ${u.upgradeId} | Cost: ${u.baseCost} | CPS: ${u.cpsBonus} | CPC: ${u.cpcBonus}</small>
+      </div>
+      <div class="actions">
+        <button>Edit</button>
+        <button>Delete</button>
+      </div>
+    `;
+
+    const buttons = div.querySelectorAll("button");
+    buttons[0].onclick = () => fillUpgradeForm(u);
+    buttons[1].onclick = async () => {
+      if (!confirm(`Delete upgrade "${u.name}"?`)) return;
+      await api(`/api/upgrades/${u.upgradeId}`, { method: "DELETE" });
+      await loadAdminUpgrades();
+      await loadGameState();
+    };
+
+    container.appendChild(div);
+  });
+}
+
+function wireAdminPanel() {
+  const btnAdminToggle = document.getElementById("btn-admin-toggle");
+  const btnAdminClose = document.getElementById("btn-admin-close");
+  const tabUpgrades = document.getElementById("tab-upgrades");
+  const tabUsers = document.getElementById("tab-users");
+  const tabUserUpgrades = document.getElementById("tab-userupgrades");
+  const btnUpgradeClear = document.getElementById("btn-upgrade-clear");
+  const btnUpgradeSave = document.getElementById("btn-upgrade-save");
+
+  if (btnAdminToggle) {
+    btnAdminToggle.onclick = () => {
+      const adminPanel = document.getElementById("admin-panel");
+      if (adminPanel) adminPanel.classList.remove("hidden");
+      showAdminTab("admin-upgrades");
+      loadAdminUpgrades();
+    };
+  }
+
+  if (btnAdminClose) {
+    btnAdminClose.onclick = () => {
+      const adminPanel = document.getElementById("admin-panel");
+      if (adminPanel) adminPanel.classList.add("hidden");
+    };
+  }
+
+  if (tabUpgrades) {
+    tabUpgrades.onclick = () => {
+      showAdminTab("admin-upgrades");
+      loadAdminUpgrades();
+    };
+  }
+
+  if (tabUsers) {
+    tabUsers.onclick = () => {
+      showAdminTab("admin-users");
+    };
+  }
+
+  if (tabUserUpgrades) {
+    tabUserUpgrades.onclick = () => {
+      showAdminTab("admin-userupgrades");
+    };
+  }
+
+  if (btnUpgradeClear) {
+    btnUpgradeClear.onclick = clearUpgradeForm;
+  }
+
+  if (btnUpgradeSave) {
+    btnUpgradeSave.onclick = async () => {
+      const id = document.getElementById("upgrade-id").value.trim();
+
+      const payload = {
+        name: document.getElementById("upgrade-name").value.trim(),
+        description: document.getElementById("upgrade-description").value.trim(),
+        imageUrl: document.getElementById("upgrade-imageurl").value.trim(),
+        baseCost: Number(document.getElementById("upgrade-basecost").value),
+        cpsBonus: Number(document.getElementById("upgrade-cpsbonus").value),
+        cpcBonus: Number(document.getElementById("upgrade-cpcbonus").value),
+        maxQuantity: Number(document.getElementById("upgrade-maxquantity").value),
+        isActive: document.getElementById("upgrade-isactive").checked
+      };
+
+      if (id) {
+        await api(`/api/upgrades/${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+      } else {
+        await api("/api/upgrades", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+      }
+
+      clearUpgradeForm();
+      await loadAdminUpgrades();
+      await loadGameState();
+    };
+  }
+}
+
+/* ---------- STARTUP ---------- */
+
+function wireMainButtons() {
+  const btnStart = document.getElementById("btn-start");
+  const btnLogin = document.getElementById("btn-login");
+  const btnRegister = document.getElementById("btn-register");
+  const btnLogout = document.getElementById("btn-logout");
+  const mrCash = document.getElementById("mr_cash");
+
+  if (btnStart) {
+    btnStart.onclick = () => {
+      if (token) {
+        loadGameState()
+          .then(() => showScreen("screen-game"))
+          .catch(() => showScreen("screen-auth"));
+      } else {
+        showScreen("screen-auth");
+      }
+    };
+  }
+
+  if (btnLogin) {
+    btnLogin.onclick = () => login().catch(e => setAuthError(e.message));
+  }
+
+  if (btnRegister) {
+    btnRegister.onclick = () => register().catch(e => setRegError(e.message));
+  }
+
+  if (btnLogout) {
+    btnLogout.onclick = logout;
+  }
+
+  if (mrCash) {
+    mrCash.onclick = click_Mr_Cash;
+  }
+}
+
+function startTickLoop() {
+  setInterval(async () => {
+    if (!token) return;
+    try {
+      await api("/api/game/tick", { method: "POST" });
+      await loadGameState();
+    } catch {}
+  }, 1000);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  wireMainButtons();
+  wireAdminPanel();
+  startTickLoop();
+  showScreen("screen-loading");
+});

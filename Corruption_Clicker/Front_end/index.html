@@ -16,37 +16,50 @@
   </section>
 
   <!-- LOGIN / REGISTER -->
-  <section id="screen-auth" class="screen hidden">
-    <h2>Login</h2>
-
-    <div class="card">
-      <label>Username</label>
-      <input id="login-username" type="text" maxlength="30" />
-
-      <label>Password</label>
-      <input id="login-password" type="password" />
-
-      <button id="btn-login">Login</button>
-      <p id="auth-error" class="error"></p>
+  <section id="screen-auth" class="screen hidden auth-screen">
+  <div class="auth-wrap">
+    <div class="auth-info">
+      <h1>Corruption Clicker</h1>
+      <p>
+        Build your influence, buy shady upgrades, and stack passive income.
+      </p>
+      <p class="muted">
+        Login if you already have an account, or register to start playing.
+      </p>
     </div>
 
-    <hr class="sep" />
+    <div class="auth-boxes">
+      <div class="card auth-card">
+        <h2>Login</h2>
 
-    <h2>Register</h2>
-    <div class="card">
-      <label>Username</label>
-      <input id="reg-username" type="text" maxlength="30" />
+        <label>Username</label>
+        <input id="login-username" type="text" maxlength="30" />
 
-      <label>Email</label>
-      <input id="reg-email" type="email" maxlength="100" />
+        <label>Password</label>
+        <input id="login-password" type="password" />
 
-      <label>Password</label>
-      <input id="reg-password" type="password" />
+        <button id="btn-login">Login</button>
+        <p id="auth-error" class="error"></p>
+      </div>
 
-      <button id="btn-register">Register</button>
-      <p id="reg-error" class="error"></p>
+      <div class="card auth-card">
+        <h2>Register</h2>
+
+        <label>Username</label>
+        <input id="reg-username" type="text" maxlength="30" />
+
+        <label>Email</label>
+        <input id="reg-email" type="email" maxlength="100" />
+
+        <label>Password</label>
+        <input id="reg-password" type="password" />
+
+        <button id="btn-register">Register</button>
+        <p id="reg-error" class="error"></p>
+      </div>
     </div>
-  </section>
+  </div>
+</section>
 
   <!-- GAME -->
   <section id="screen-game" class="screen hidden">
@@ -56,6 +69,7 @@
         <div id="txt-balance" class="stat">Cash: 0</div>
         <div id="txt-cpc" class="stat">Cash/Click: 1</div>
       </div>
+        <button id="btn-admin-toggle" class="hidden">Admin</button>
       <button id="btn-logout">Logout</button>
     </header>
 
@@ -67,11 +81,10 @@
       </aside>
 
       <!-- RIGHT: DELIAN -->
-      <section class="cash_area">
-        <img id="mr_cash" src="images/mr_cash.png" alt="mr_cash" />
-        <button id="btn-click" class="big-btn">CLICK</button>
-        <p id="game-error" class="error"></p>
-      </section>
+        <section class="cookie-area">
+            <img id="mr_cash" src="images/mr_cash.png" alt="mr_cash" />
+            <p id="game-error" class="error"></p>
+        </section>
     </main>
   </section>
 
