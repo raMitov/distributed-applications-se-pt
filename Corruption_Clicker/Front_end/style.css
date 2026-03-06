@@ -1,0 +1,108 @@
+body{
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 24px;
+  background: #111;
+  color: #eee;
+}
+
+.screen{ max-width: 1000px; margin: 0 auto; }
+.hidden{ display: none; }
+
+.card{
+  background: #1c1c1c;
+  padding: 16px;
+  border-radius: 10px;
+  max-width: 420px;
+}
+
+label{ display:block; margin-top: 10px; font-size: 14px; opacity: .9; }
+input{
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border-radius: 8px;
+  border: 1px solid #333;
+  background: #0f0f0f;
+  color: #eee;
+}
+
+button{
+  margin-top: 14px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 0;
+  cursor: pointer;
+}
+
+.error{ color: #ff7777; min-height: 18px; }
+
+.sep{ border: none; border-top: 1px solid #333; margin: 20px 0; }
+
+.topbar{
+  display:flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.stat{ margin-top: 6px; }
+
+.layout{
+  display: flex;
+  gap: 18px;
+}
+
+.panel{
+  width: 360px;
+  background: #1c1c1c;
+  border-radius: 10px;
+  padding: 14px;
+}
+
+.upgrades{ display: flex; flex-direction: column; gap: 10px; }
+
+.upgrade{
+  display:flex;
+  gap: 10px;
+  align-items: center;
+  background: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 10px;
+}
+
+.upgrade img{
+  width: 44px;
+  height: 44px;
+  object-fit: cover;
+  border-radius: 8px;
+}
+
+.upgrade .meta{ flex: 1; }
+.upgrade .name{ font-weight: bold; }
+.upgrade .sub{ font-size: 13px; opacity: .85; margin-top: 4px; }
+
+.cash_area{
+  flex: 1;
+  display:flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: #1c1c1c;
+  border-radius: 10px;
+  padding: 14px;
+  min-height: 420px;
+}
+
+#mr_cash{
+  width: 220px;
+  height: 220px;
+  object-fit: contain;
+}
+
+.big-btn{
+  font-size: 18px;
+  padding: 14px 26px;
+}

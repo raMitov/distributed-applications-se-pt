@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Corruption Clicker</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- LOADING / SPLASH -->
+  <section id="screen-loading" class="screen">
+    <h1>Corruption Clicker</h1>
+    <p>Click Mr. Cash. Buy upgrades. Get rich.</p>
+    <button id="btn-start">Start</button>
+  </section>
+
+  <!-- LOGIN / REGISTER -->
+  <section id="screen-auth" class="screen hidden">
+    <h2>Login</h2>
+
+    <div class="card">
+      <label>Username</label>
+      <input id="login-username" type="text" maxlength="30" />
+
+      <label>Password</label>
+      <input id="login-password" type="password" />
+
+      <button id="btn-login">Login</button>
+      <p id="auth-error" class="error"></p>
+    </div>
+
+    <hr class="sep" />
+
+    <h2>Register</h2>
+    <div class="card">
+      <label>Username</label>
+      <input id="reg-username" type="text" maxlength="30" />
+
+      <label>Email</label>
+      <input id="reg-email" type="email" maxlength="100" />
+
+      <label>Password</label>
+      <input id="reg-password" type="password" />
+
+      <button id="btn-register">Register</button>
+      <p id="reg-error" class="error"></p>
+    </div>
+  </section>
+
+  <!-- GAME -->
+  <section id="screen-game" class="screen hidden">
+    <header class="topbar">
+      <div>
+        <div id="txt-user"></div>
+        <div id="txt-balance" class="stat">Cash: 0</div>
+        <div id="txt-cpc" class="stat">Cash/Click: 1</div>
+      </div>
+      <button id="btn-logout">Logout</button>
+    </header>
+
+    <main class="layout">
+      <!-- LEFT: UPGRADES -->
+      <aside class="panel">
+        <h3>Upgrades</h3>
+        <div id="upgrades-list" class="upgrades"></div>
+      </aside>
+
+      <!-- RIGHT: DELIAN -->
+      <section class="cash_area">
+        <img id="mr_cash" src="images/mr_cash.png" alt="mr_cash" />
+        <button id="btn-click" class="big-btn">CLICK</button>
+        <p id="game-error" class="error"></p>
+      </section>
+    </main>
+  </section>
+
+  <script src="app.js"></script>
+</body>
+</html>
